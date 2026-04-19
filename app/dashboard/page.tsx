@@ -1,279 +1,208 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
 import QuickStockModal from "./QuickStockModal";
-import {
-  BookOpen,
-  AlertTriangle,
-  PlusCircle,
-  Users,
-  ArrowUp,
-  ArrowRight,
-} from "lucide-react";
-import { getUser } from "@/lib/api";
-
-// ── Dynamic greeting helper ───────────────────────────────────────────────
-function getDynamicSubtitle(name: string): string {
-  const now = new Date();
-  const hour = now.getHours();
-  const day = now.getDay(); // 0=Sun … 6=Sat
-
-  const timeOfDay =
-    hour < 5  ? "night" :
-    hour < 12 ? "morning" :
-    hour < 17 ? "afternoon" :
-    hour < 21 ? "evening" : "night";
-
-  const dayMessages: Record<number, string[]> = {
-    0: [ // Sunday
-      `Sunday mode, ${name}. Light day — perfect for reviewing stock levels before the week kicks off.`,
-      `Rest day, but inventory never sleeps. A quick scan today saves chaos tomorrow.`,
-    ],
-    1: [ // Monday
-      `New week, fresh goals. Let's make Monday count on the shelves, ${name}.`,
-      `Monday momentum — your inventory dashboard is primed and ready to go.`,
-      `Week starts now. Check what's low, restock what matters, crush it.`,
-    ],
-    2: [ // Tuesday
-      `Tuesdays are for tightening up. Any gaps from yesterday?`,
-      `You're two days in — a great time to spot what needs attention, ${name}.`,
-    ],
-    3: [ // Wednesday
-      `Midweek check-in. How are those stock levels holding up, ${name}?`,
-      `Hump day! Stay sharp — the week is yours to command.`,
-      `Wednesday snapshot: half the week done, half the opportunities ahead.`,
-    ],
-    4: [ // Thursday
-      `Almost Friday, ${name}. Make sure everything is stocked before the weekend rush.`,
-      `Thursday hustle — one push and you're golden for the week.`,
-    ],
-    5: [ // Friday
-      `End of week review time, ${name}. Let's close strong. 🔥`,
-      `Friday energy! Wrap up the week with your inventory in top shape.`,
-      `Last sprint, ${name}. Lock in the numbers before the weekend.`,
-    ],
-    6: [ // Saturday
-      `Saturday in the system — you're dedicated, ${name}. Respect. 🚀`,
-      `Weekend warrior mode activated. Quick check before you log off for the day.`,
-    ],
-  };
-
-  const timeMessages: Record<string, string[]> = {
-    night: [
-      `Burning the midnight oil, ${name}? The inventory is watching over you too.`,
-      `Late-night session — the quietest time to get the clearest picture.`,
-    ],
-    morning: [
-      `Good morning, ${name}! Fresh start, fresh stock — let's set the tone for the day.`,
-      `Rise and log in. Your morning briefing for Central Campus is ready.`,
-      `Morning clarity is the best clarity. Here's where things stand today.`,
-    ],
-    afternoon: [
-      `Afternoon check-in — see how the day's moves are shaping up, ${name}.`,
-      `Peak hours, peak focus. Here's your live inventory snapshot.`,
-      `Midday pulse: stay ahead of demand and keep the shelves in check.`,
-    ],
-    evening: [
-      `Evening wrap-up, ${name}. How did today's inventory hold up?`,
-      `Winding down the day — one last look at the numbers before you rest.`,
-      `Golden hour for data review. Here's tonight's campus inventory summary.`,
-    ],
-  };
-
-  // Combine day + time messages and pick one deterministically
-  const pool = [
-    ...(dayMessages[day] ?? []),
-    ...(timeMessages[timeOfDay] ?? []),
-  ];
-
-  // Use minute as a slowly-rotating seed so it changes each visit but feels stable
-  const seed = now.getMinutes() % pool.length;
-  return pool[seed] ?? `Here is your ${timeOfDay} briefing for Central Campus Inventory.`;
-}
 
 export default function DashboardPage() {
-  const [userName, setUserName] = useState("there");
-  const [userRole, setUserRole] = useState("User");
-
-  useEffect(() => {
-    const user = getUser();
-    if (user) {
-      // Show first name only
-      setUserName(user.name.split(" ")[0]);
-      setUserRole(
-        user.role.charAt(0).toUpperCase() + user.role.slice(1)
-      );
-    }
-  }, []);
-
-  const subtitle = useMemo(() => getDynamicSubtitle(userName), [userName]);
-
-  const criticalItems = [
-    { id: "PRD-001", name: "GMIT Record Book", left: 2, unit: "books", color: "danger" },
-    { id: "PRD-045", name: "Engineering Drawing Kit", left: 5, unit: "kits", color: "warning" },
-    { id: "PRD-112", name: "A4 Copy Paper (Ream)", left: 8, unit: "reams", color: "warning" },
-  ];
-
-  const trendingItems = [
-    { rank: 1, name: "Advanced Mathematics", requests: "+45 requests" },
-    { rank: 2, name: "Physics Lab Manual", requests: "+32 requests" },
-    { rank: 3, name: "CS Data Structures", requests: "+28 requests" },
-  ];
-
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
-
-      {/* Header */}
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4">
-        <div>
-          <span className="inline-block px-3 py-1 bg-brand-success/10 border border-brand-success/20 text-brand-success text-[10px] font-bold uppercase tracking-widest rounded-full mb-3">
-            {userRole}
-          </span>
-          <h2 className="text-4xl font-black tracking-tight text-white mb-2">
-            Welcome back, {userName}.
-          </h2>
-          <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
-            {subtitle}
-          </p>
-        </div>
-        <QuickStockModal />
-      </header>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-        {/* Total Books */}
-        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden flex flex-col justify-between h-32">
-          <div className="flex justify-between items-start">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-indigo-400" />
-            </div>
-            <span className="text-[11px] font-bold text-brand-success">+12% this month</span>
-          </div>
+    <div className="min-h-screen bg-[#fafafa] p-8 font-sans text-gray-900">
+      <div className="max-w-[1400px] mx-auto space-y-8">
+        
+        {/* Header section matching mock */}
+        <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xs font-semibold text-slate-400 mb-1">Total Books</h3>
-            <span className="text-3xl font-bold font-mono text-white tracking-tight">12,408</span>
+            <span className="inline-block px-3 py-1 bg-[#bdf0d9] text-[#1a9a62] text-xs font-extrabold tracking-widest uppercase rounded-full mb-4">
+              SENIOR REGISTRAR
+            </span>
+            <h1 className="text-4xl font-extrabold tracking-tight mb-2">Welcome back, Alex.</h1>
+            <p className="text-gray-500 text-lg">Here is your morning briefing for Central Campus Inventory.</p>
           </div>
+          
+          <QuickStockModal />
         </div>
 
-        {/* Low Stock Items */}
-        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden flex flex-col justify-between h-32">
-          <div className="flex justify-between items-start">
-            <div className="w-8 h-8 rounded-lg bg-brand-danger/10 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 text-brand-danger" />
+        {/* 4 Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          {/* Card 1 */}
+          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-indigo-900" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+              </div>
+              <span className="text-sm font-bold text-emerald-600">+12% this month</span>
             </div>
-            <span className="text-[11px] font-bold text-brand-danger">Requires Attention</span>
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold text-slate-400 mb-1">Low Stock Items</h3>
-            <span className="text-3xl font-bold font-mono text-white tracking-tight">04</span>
-          </div>
-        </div>
-
-        {/* Items Added Today */}
-        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden flex flex-col justify-between h-32">
-          <div className="flex items-start">
-            <div className="w-8 h-8 rounded-lg bg-[#4a9eff]/10 flex items-center justify-center">
-              <PlusCircle className="w-4 h-4 text-[#4a9eff]" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold text-slate-400 mb-1">Items Added Today</h3>
-            <span className="text-3xl font-bold font-mono text-white tracking-tight">34</span>
-          </div>
-        </div>
-
-        {/* Total Active Users — gradient card */}
-        <div className="bg-gradient-primary rounded-xl p-5 shadow-lg glow-hover relative overflow-hidden flex flex-col justify-between h-32 border border-white/10">
-          <div className="absolute inset-0 bg-black/10" />
-          <div className="flex items-start relative z-10">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Users className="w-4 h-4 text-white" />
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Total Books</p>
+              <h3 className="text-4xl font-extrabold text-gray-900">12,408</h3>
             </div>
           </div>
-          <div className="relative z-10">
-            <h3 className="text-xs font-semibold text-white/80 mb-1">Total Active Users</h3>
-            <span className="text-3xl font-bold font-mono text-white tracking-tight">1,204</span>
+
+          {/* Card 2 */}
+          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <span className="text-xs font-bold text-red-600">Requires Attention</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Low Stock Items</p>
+              <h3 className="text-4xl font-extrabold text-gray-900">04</h3>
+            </div>
           </div>
+
+          {/* Card 3 */}
+          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Items Added Today</p>
+              <h3 className="text-4xl font-extrabold text-gray-900">34</h3>
+            </div>
+          </div>
+
+          {/* Card 4 - Dark Blue */}
+          <div className="bg-[#293d9b] p-6 rounded-[20px] shadow-[0_2px_15px_rgba(41,61,155,0.4)] flex flex-col justify-between h-48 text-white">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 bg-[#3e53b2] rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-200 mb-1">Total Active Users</p>
+              <h3 className="text-4xl font-extrabold text-white">1,204</h3>
+            </div>
+          </div>
+
         </div>
 
-      </div>
+        {/* Lower layout split */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+          
+          {/* Critical Low Stock section */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between xl:mr-10 mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Critical Low Stock</h2>
+              <a href="/inventory" className="text-sm font-bold text-indigo-700 hover:text-indigo-900 transition">View All Inventory</a>
+            </div>
 
-      {/* Lower Two-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-
-        {/* Critical Low Stock */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-white">Critical Low Stock</h3>
-            <a href="/inventory" className="text-xs font-bold text-[#4a9eff] hover:text-white transition-colors">
-              View All Inventory
-            </a>
-          </div>
-          <div className="space-y-3">
-            {criticalItems.map((item, idx) => {
-              const isDanger = item.color === "danger";
-              const dotColor = isDanger ? "bg-brand-danger" : "bg-brand-warning";
-              const textColor = isDanger ? "text-brand-danger" : "text-brand-warning";
-              const iconBg = isDanger ? "bg-brand-danger/10 border-brand-danger/20" : "bg-brand-warning/10 border-brand-warning/20";
-              const iconColor = isDanger ? "text-brand-danger" : "text-brand-warning";
-              return (
-                <div
-                  key={idx}
-                  className="bg-brand-card/50 border border-brand-border rounded-xl p-4 flex items-center justify-between hover:bg-brand-bg/60 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform ${iconBg}`}>
-                      <BookOpen className={`w-5 h-5 ${iconColor}`} />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-white">{item.name}</span>
-                      <span className="text-xs font-mono text-slate-400 mt-0.5">ID: {item.id}</span>
-                    </div>
+            <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 p-6 flex flex-col gap-6">
+              
+              {/* Item 1 */}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${dotColor} ${isDanger ? "animate-pulse" : ""}`} />
-                    <span className={`font-bold text-sm ${textColor}`}>
-                      {item.left} {item.unit} left
-                    </span>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">GMIT Record Book</h4>
+                    <p className="text-sm font-medium text-gray-500">ID: PRD-001</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Trending This Week */}
-        <div className="lg:col-span-1">
-          <h3 className="text-lg font-bold text-white mb-4">Trending This Week</h3>
-          <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top h-full flex flex-col">
-            <div className="space-y-6 flex-1">
-              {trendingItems.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 group">
-                  <div className="w-8 h-8 rounded-full bg-[#4a9eff]/10 text-[#4a9eff] flex items-center justify-center font-bold text-sm border border-[#4a9eff]/20 group-hover:bg-[#4a9eff] group-hover:text-white transition-colors">
-                    {item.rank}
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <span className="font-bold text-sm text-slate-200 group-hover:text-white transition-colors">
-                      {item.name}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">
-                      {item.requests}
-                    </span>
-                  </div>
-                  <ArrowUp className="w-4 h-4 text-brand-success" />
+                <div className="text-right flex items-center gap-3">
+                  <span className="flex h-3 w-3 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                  </span>
+                  <p className="text-xl font-bold text-red-600">2 books left</p>
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 pt-4 border-t border-brand-border">
-              <a
-                href="/inventory"
-                className="w-full text-center text-xs font-bold text-[#4a9eff] flex items-center justify-center gap-1 hover:text-white transition-colors"
-              >
-                See full trend report <ArrowRight className="w-3 h-3" />
-              </a>
+              </div>
+
+              {/* Item 2 */}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                       <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Engineering Drawing Kit</h4>
+                    <p className="text-sm font-medium text-gray-500">ID: PRD-045</p>
+                  </div>
+                </div>
+                <div className="text-right flex items-center gap-3">
+                  <span className="flex h-3 w-3 relative">
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                  </span>
+                  <p className="text-xl font-bold text-orange-600">5 kits left</p>
+                </div>
+              </div>
+
+              {/* Item 3 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                      <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">A4 Copy Paper (Ream)</h4>
+                    <p className="text-sm font-medium text-gray-500">ID: PRD-112</p>
+                  </div>
+                </div>
+                <div className="text-right flex items-center gap-3">
+                  <span className="flex h-3 w-3 relative">
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                  </span>
+                  <p className="text-xl font-bold text-orange-600">8 reams left</p>
+                </div>
+              </div>
+
             </div>
           </div>
+
+          {/* Trending Books section */}
+          <div className="lg:col-span-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Trending This Week</h2>
+            <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_15px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col gap-5 h-[calc(100%-3rem)]">
+              
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">1</div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">Advanced Mathematics</p>
+                  <p className="text-xs text-gray-500">+45 requests</p>
+                </div>
+                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">2</div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">Physics Lab Manual</p>
+                  <p className="text-xs text-gray-500">+32 requests</p>
+                </div>
+                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">3</div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">CS Data Structures</p>
+                  <p className="text-xs text-gray-500">+28 requests</p>
+                </div>
+                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+              </div>
+
+              <div className="mt-auto pt-4 border-t border-gray-100">
+                <a href="/inventory" className="text-sm font-bold text-indigo-700 hover:text-indigo-900 block text-center w-full">See full trend report</a>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>

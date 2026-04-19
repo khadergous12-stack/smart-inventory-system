@@ -1,148 +1,154 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { Plus, BookOpen, AlertTriangle, PlusCircle, Users, ArrowUp, ArrowRight } from "lucide-react";
 
-export default function SplashPage() {
-  const router = useRouter();
+export default function Home() {
+  const criticalItems = [
+    { id: "PRD-001", name: "GMIT Record Book", left: 2, unit: "books" },
+    { id: "PRD-045", name: "Engineering Drawing Kit", left: 5, unit: "kits" },
+    { id: "PRD-112", name: "A4 Copy Paper (Ream)", left: 8, unit: "reams" },
+  ];
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/dashboard");
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [router]);
+  const trendingItems = [
+    { rank: 1, name: "Advanced Mathematics", requests: "+45 requests" },
+    { rank: 2, name: "Physics Lab Manual", requests: "+32 requests" },
+    { rank: 3, name: "CS Data Structures", requests: "+28 requests" },
+  ];
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800;900&display=swap');
+    <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
 
-        .splash-root {
-          position: fixed;
-          inset: 0;
-          width: 100vw;
-          height: 100vh;
-          background: #080b14;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          z-index: 99999;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          overflow: hidden;
-          animation: rootFadeOut 0.4s ease 2.65s forwards;
-        }
+      {/* Header Section */}
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4">
+        <div>
+          <span className="inline-block px-3 py-1 bg-brand-success/10 border border-brand-success/20 text-brand-success text-[10px] font-bold uppercase tracking-widest rounded-full mb-3">
+            Senior Registrar
+          </span>
+          <h2 className="text-4xl font-black tracking-tight text-white mb-2">Welcome back, Alex.</h2>
+          <p className="text-sm text-slate-400">Here is your morning briefing for Central Campus Inventory.</p>
+        </div>
+        <button className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-slate-200 rounded-xl font-bold text-sm transition-transform hover:scale-105 active:scale-95 mt-4 sm:mt-0 shadow-lg shadow-white/10">
+          <Plus className="w-4 h-4" />
+          Quick Stock Entry
+        </button>
+      </header>
 
-        @keyframes rootFadeOut {
-          from { opacity: 1; }
-          to   { opacity: 0; pointer-events: none; }
-        }
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Books */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden group flex flex-col justify-between h-32">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-4 h-4 text-indigo-400" />
+            </div>
+            <span className="text-[11px] font-bold text-brand-success">+12% this month</span>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Total Books</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">12,408</span>
+          </div>
+        </div>
 
-        /* Ambient glow blobs */
-        .splash-blob-1 {
-          position: absolute;
-          top: -10%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 700px;
-          height: 700px;
-          background: radial-gradient(circle, rgba(74,158,255,0.07) 0%, transparent 70%);
-          pointer-events: none;
-          animation: blobPulse 4s ease-in-out infinite alternate;
-        }
-        .splash-blob-2 {
-          position: absolute;
-          bottom: -10%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%);
-          pointer-events: none;
-          animation: blobPulse 4s ease-in-out infinite alternate-reverse;
-        }
+        {/* Low Stock Items */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden group flex flex-col justify-between h-32">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-8 rounded-lg bg-brand-danger/10 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 text-brand-danger" />
+            </div>
+            <span className="text-[11px] font-bold text-brand-danger">Requires Attention</span>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Low Stock Items</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">04</span>
+          </div>
+        </div>
 
-        @keyframes blobPulse {
-          from { opacity: 0.5; transform: translateX(-50%) scale(1); }
-          to   { opacity: 1;   transform: translateX(-50%) scale(1.15); }
-        }
+        {/* Items Added Today */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover relative overflow-hidden group flex flex-col justify-between h-32">
+          <div className="flex items-start">
+            <div className="w-8 h-8 rounded-lg bg-[#4a9eff]/10 flex items-center justify-center flex-shrink-0">
+              <PlusCircle className="w-4 h-4 text-[#4a9eff]" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Items Added Today</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">34</span>
+          </div>
+        </div>
 
-        /* Content wrapper */
-        .splash-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 22px;
-          text-align: center;
-        }
-
-        /* 1 · Wordmark */
-        .splash-wordmark {
-          font-size: clamp(3.5rem, 10vw, 7rem);
-          font-weight: 900;
-          letter-spacing: -0.04em;
-          line-height: 1;
-          background: linear-gradient(135deg, #4a9eff 0%, #7c3aed 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          opacity: 0;
-          transform: scale(0.88);
-          animation: wordmarkIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
-        }
-
-        @keyframes wordmarkIn {
-          to { opacity: 1; transform: scale(1); }
-        }
-
-        /* 2 · Slogan */
-        .splash-slogan {
-          font-family: 'Courier New', 'Consolas', monospace;
-          font-size: clamp(0.7rem, 2vw, 0.9rem);
-          font-weight: 400;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: #6b7a9a;
-          opacity: 0;
-          animation: fadeUp 0.5s ease 0.7s forwards;
-        }
-
-        /* 3 · Gradient divider */
-        .splash-divider {
-          width: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #4a9eff, #7c3aed, transparent);
-          border-radius: 999px;
-          animation: dividerExpand 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards;
-        }
-
-        @keyframes dividerExpand {
-          from { width: 0; opacity: 0; }
-          to   { width: min(260px, 40vw); opacity: 1; }
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
-      <div className="splash-root">
-        <div className="splash-blob-1" />
-        <div className="splash-blob-2" />
-
-        <div className="splash-content">
-          {/* 1 · Wordmark */}
-          <h1 className="splash-wordmark">Stockline</h1>
-
-          {/* 2 · Slogan */}
-          <p className="splash-slogan">SmartStock&nbsp;·&nbsp;Zero Chaos</p>
-
-          {/* 3 · Gradient divider */}
-          <div className="splash-divider" />
+        {/* Total Active Users */}
+        <div className="bg-gradient-primary rounded-xl p-5 shadow-lg glow-hover relative overflow-hidden group flex flex-col justify-between h-32 border border-white/10">
+          <div className="absolute inset-0 bg-black/10" />
+          <div className="flex items-start relative z-10">
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-xs font-semibold text-white/80 mb-1">Total Active Users</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">1,204</span>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Two Column Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+
+        {/* Critical Low Stock */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-white">Critical Low Stock</h3>
+            <button className="text-xs font-bold text-[#4a9eff] hover:text-white transition-colors">View All Inventory</button>
+          </div>
+          <div className="space-y-3">
+            {criticalItems.map((item, idx) => (
+              <div key={idx} className="bg-brand-card/50 border border-brand-border rounded-xl p-4 flex items-center justify-between hover:bg-brand-bg/60 transition-colors group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-brand-danger/10 flex items-center justify-center border border-brand-danger/20 group-hover:scale-105 transition-transform">
+                    <BookOpen className="w-5 h-5 text-brand-danger" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white">{item.name}</span>
+                    <span className="text-xs font-mono text-slate-400 mt-0.5">ID: {item.id}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-brand-danger animate-pulse" />
+                  <span className="font-bold text-brand-danger text-sm">{item.left} {item.unit} left</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trending This Week */}
+        <div className="lg:col-span-1">
+          <h3 className="text-lg font-bold text-white mb-4">Trending This Week</h3>
+          <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top h-full flex flex-col">
+            <div className="space-y-6 flex-1">
+              {trendingItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4 group">
+                  <div className="w-8 h-8 rounded-full bg-[#4a9eff]/10 text-[#4a9eff] flex items-center justify-center font-bold text-sm border border-[#4a9eff]/20 group-hover:bg-[#4a9eff] group-hover:text-white transition-colors">
+                    {item.rank}
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-bold text-sm text-slate-200 group-hover:text-white transition-colors">{item.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">{item.requests}</span>
+                  </div>
+                  <ArrowUp className="w-4 h-4 text-brand-success" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 pt-4 border-t border-brand-border">
+              <button className="w-full text-center text-xs font-bold text-[#4a9eff] flex items-center justify-center gap-1 hover:text-white transition-colors">
+                See full trend report <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 }

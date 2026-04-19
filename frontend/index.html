@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STOCKLINE - Redirecting</title>
+</head>
+<body>
+  <h2>My updated Git change - Hello World!</h2>
+  <script src="js/script.js"></script>
+  <script>
+    setTimeout(() => {
+      if (isAuthenticated()) {
+        window.location.href = 'dashboard.html';
+      } else {
+        window.location.href = 'login.html';
+      }
+    }, 3000);
+  </script>
+</body>
+</html>

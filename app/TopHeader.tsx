@@ -3,10 +3,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, Bell, User, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
+import { getUser, clearSession } from "@/lib/api";
 
 export default function TopHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    const user = getUser();
+    if (user?.name) setUserName(user.name);
+  }, []);
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -20,7 +27,7 @@ export default function TopHeader() {
   }, []);
 
   return (
-    <header className="h-16 flex items-center justify-between px-8 border-b border-brand-border/50 shrink-0 z-10 w-full bg-brand-bg/80 backdrop-blur-md">
+    <header className="relative h-16 flex items-center justify-between px-8 border-b border-brand-border/50 shrink-0 z-50 w-full bg-brand-bg/80 backdrop-blur-md">
       <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -51,7 +58,7 @@ export default function TopHeader() {
           {isOpen && (
             <div className="absolute right-0 mt-3 w-56 bg-[#161f33] border border-brand-border rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col origin-top-right animate-in fade-in zoom-in duration-200">
               <div className="px-4 py-3 border-b border-brand-border bg-[#0b1121]/50">
-                <p className="text-sm font-semibold text-white">Alex User</p>
+                <p className="text-sm font-semibold text-white">{userName}</p>
                 <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-success"></span> Active Session
                 </p>
@@ -67,7 +74,7 @@ export default function TopHeader() {
                 </button>
               </div>
               <div className="py-1 border-t border-brand-border">
-                <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-brand-danger hover:bg-brand-danger/10 transition-colors">
+                <Link href="/login" onClick={() => { setIsOpen(false); clearSession(); }} className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-brand-danger hover:bg-brand-danger/10 transition-colors">
                   <LogOut className="w-4 h-4" />
                   Sign Out
                 </Link>

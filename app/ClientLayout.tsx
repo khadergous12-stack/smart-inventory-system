@@ -22,14 +22,14 @@ const PUBLIC_ROUTES = ["/", "/login", "/register"];
 
 // Nav items — adminOnly: true means only admins see them
 const NAV_ITEMS = [
-  { label: "Dashboard",        href: "/dashboard",         icon: LayoutDashboard, adminOnly: false },
-  { label: "Inventory",        href: "/inventory",         icon: Package,         adminOnly: false },
-  { label: "Pre-Booking",      href: "/pre-booking",       icon: Calendar,        adminOnly: false },
-  { label: "Stock Management", href: "/stock-management",  icon: Database,        adminOnly: false },
-  { label: "Transactions",     href: "/transactions",      icon: ArrowLeftRight,  adminOnly: false },
-  { label: "Reports",          href: "/reports",           icon: FileText,        adminOnly: false },
-  { label: "Users",            href: "/users",             icon: Users,           adminOnly: true  },
-  { label: "Settings",         href: "/settings",          icon: Settings,        adminOnly: false },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
+  { label: "Inventory", href: "/inventory", icon: Package, adminOnly: false },
+  { label: "Pre-Booking", href: "/pre-booking", icon: Calendar, adminOnly: false },
+  { label: "Stock Management", href: "/stock-management", icon: Database, adminOnly: false },
+  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight, adminOnly: false },
+  { label: "Reports", href: "/reports", icon: FileText, adminOnly: false },
+  { label: "Users", href: "/users", icon: Users, adminOnly: true },
+  { label: "Settings", href: "/settings", icon: Settings, adminOnly: false },
 ];
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +39,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const [userInitials, setUserInitials] = useState("U");
   const [userRole, setUserRole] = useState("user");
   const [ready, setReady] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const isPublic = PUBLIC_ROUTES.includes(pathname);
@@ -100,11 +101,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === href
-                    ? "nav-active"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${pathname === href
+                  ? "nav-active"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 {label}
@@ -139,14 +139,36 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </aside>
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-brand-bg relative z-0">
-        {/* Ambient Gradients */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#4a9eff]/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#7c3aed]/5 blur-[120px] rounded-full pointer-events-none" />
+      <main
+        className="flex-1 flex flex-col h-screen overflow-hidden bg-brand-bg relative z-0"
+        onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+      >
+        {/* Ambient Tracking Light (Bioluminescence) */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            className="absolute rounded-full opacity-10 blur-[90px] transition-all duration-300 ease-out"
+            style={{
+              width: "600px",
+              height: "600px",
+              background: "radial-gradient(circle, #00f2fe 0%, #0369a1 70%)",
+              left: `${mousePos.x - 300}px`,
+              top: `${mousePos.y - 300}px`,
+            }}
+          />
+        </div>
 
-        <TopHeader />
+        {/* Ambient Fixed Gradients (Bioluminescence) */}
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[#00f2fe]/5 blur-[120px] rounded-full pointer-events-none z-0" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#0284c7]/10 blur-[130px] rounded-full pointer-events-none z-0" />
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="relative z-10 w-full flex-none">
+          <TopHeader />
+        </div>
+
+        <div className="flex-1 overflow-y-auto relative z-10">
           {children}
         </div>
       </main>

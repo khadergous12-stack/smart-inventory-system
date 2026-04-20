@@ -1,18 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
-import { UserPlus, Search, Mail, Shield } from "lucide-react";
-
-const usersList = [
-  { id: "USR-001", name: "Alfonso Davies", email: "alfonso@gmit.edu.in", role: "Admin", status: "ACTIVE" },
-  { id: "USR-002", name: "Sophia Martinez", email: "smartinez@gmit.edu.in", role: "Manager", status: "ACTIVE" },
-  { id: "USR-003", name: "Ravi Kumar", email: "rkumar@student.edu", role: "User", status: "ACTIVE" },
-  { id: "USR-004", name: "Aisha Patel", email: "apatel@student.edu", role: "User", status: "INACTIVE" },
-  { id: "USR-005", name: "Ethan Hunt", email: "ehunt@gmit.edu.in", role: "Manager", status: "ACTIVE" },
-];
+import React, { useState, useEffect } from "react";
+import { UserPlus, Search, Mail, Shield, Loader2 } from "lucide-react";
+import { users, AppUser } from "@/lib/api";
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [usersList, setUsersList] = useState<AppUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data } = await users.list(1, 100); // fetch up to 100 for now
+      if (data) {
+        setUsersList(data.users);
+      }
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
@@ -58,7 +65,21 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border/50 text-sm">
-              {usersList
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" /> Loading users...
+                    </div>
+                  </td>
+                </tr>
+              ) : usersList.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                    No users found.
+                  </td>
+                </tr>
+              ) : usersList
                 .filter(user => 
                   user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                   user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,11 +89,11 @@ export default function UsersPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${
-                        user.role === 'Admin' ? 'bg-[#7c3aed] text-white' : 
-                        user.role === 'Manager' ? 'bg-[#4a9eff] text-white' : 
+                        user.role === 'admin' ? 'bg-[#7c3aed] text-white' : 
+                        (user.role === 'manager' || user.role === 'employee') ? 'bg-[#4a9eff] text-white' : 
                         'bg-slate-700 text-white'
                       }`}>
-                        {user.name.charAt(0)}
+                        {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-200">{user.name}</span>
@@ -83,17 +104,13 @@ export default function UsersPage() {
                   <td className="px-6 py-4 font-mono text-slate-400 group-hover:text-[#4a9eff] transition-colors">{user.id}</td>
                   <td className="px-6 py-4">
                     <span className="flex items-center gap-1.5 text-slate-300">
-                      {user.role === 'Admin' ? <Shield className="w-3.5 h-3.5 text-[#7c3aed]" /> : null}
-                      <span className="font-medium tracking-wide">{user.role}</span>
+                      {user.role === 'admin' ? <Shield className="w-3.5 h-3.5 text-[#7c3aed]" /> : null}
+                      <span className="font-medium tracking-wide uppercase text-[11px]">{user.role}</span>
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${
-                      user.status === 'ACTIVE' 
-                        ? 'bg-brand-success/10 text-brand-success border-brand-success/20' 
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}>
-                      {user.status}
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border bg-brand-success/10 text-brand-success border-brand-success/20">
+                      ACTIVE
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">

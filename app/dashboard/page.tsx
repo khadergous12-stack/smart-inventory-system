@@ -1,211 +1,334 @@
-import QuickStockModal from "./QuickStockModal";
+"use client";
+
+import { useState, useEffect } from "react";
+import { getUser } from "@/lib/api";
+import {
+  BookOpen,
+  AlertTriangle,
+  PlusCircle,
+  Users,
+  Plus,
+  ArrowUp,
+  ArrowRight,
+  X,
+} from "lucide-react";
+
+const criticalItems = [
+  { id: "PRD-001", name: "GMIT Record Book",         left: 2, unit: "books", color: "#ef4444" },
+  { id: "PRD-045", name: "Engineering Drawing Kit",  left: 5, unit: "kits",  color: "#f59e0b" },
+  { id: "PRD-112", name: "A4 Copy Paper (Ream)",     left: 8, unit: "reams", color: "#f59e0b" },
+];
+
+const trendingItems = [
+  { rank: 1, name: "Advanced Mathematics",  requests: "+45 requests" },
+  { rank: 2, name: "Physics Lab Manual",    requests: "+32 requests" },
+  { rank: 3, name: "CS Data Structures",    requests: "+28 requests" },
+];
+
+export function useCountUp(end: number, duration: number = 2000) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    let animationFrameId: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      // Easing function (easeOutExpo)
+      const easeOut = percentage === 1 ? 1 : 1 - Math.pow(2, -10 * percentage);
+      
+      setCount(Math.floor(end * easeOut));
+      
+      if (percentage < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [end, duration]);
+
+  return count;
+}
 
 export default function DashboardPage() {
+  const [showModal, setShowModal] = useState(false);
+  const [firstName, setFirstName] = useState("User");
+  const [role, setRole] = useState("Staff");
+  const [greeting, setGreeting] = useState("Welcome back");
+  const [message, setMessage] = useState("Here is your briefing for the day.");
+
+  useEffect(() => {
+    const user = getUser();
+    if (user?.name) {
+      setFirstName(user.name.split(" ")[0]);
+      setRole(user.role === 'admin' ? 'Administrator' : user.role === 'employee' ? 'Employee' : 'Student / User');
+    }
+
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreeting("Good morning");
+      setMessage("Grab a coffee and enjoy reading. Here is your morning briefing.");
+    } else if (hour < 18) {
+      setGreeting("Good afternoon");
+      setMessage("Take a break and expand your knowledge. Here is your afternoon briefing.");
+    } else {
+      setGreeting("Good evening");
+      setMessage("Wind down with a good book. Here is your evening briefing.");
+    }
+  }, []);
+
+  // Dynamic count-up values
+  const totalBooks = useCountUp(12408, 2000);
+  const lowStockCount = useCountUp(4, 1500);
+  const addedToday = useCountUp(34, 1500);
+  const activeUsers = useCountUp(1204, 2500);
+
   return (
-    <div className="min-h-screen bg-[#fafafa] p-8 font-sans text-gray-900">
-      <div className="max-w-[1400px] mx-auto space-y-8">
-        
-        {/* Header section matching mock */}
-        <div className="flex justify-between items-start">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
+
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4">
+        <div>
+          <span className="inline-block px-3 py-1 bg-brand-success/10 border border-brand-success/20 text-brand-success text-[10px] font-bold uppercase tracking-widest rounded-full mb-3">
+            {role}
+          </span>
+          <h1 className="text-4xl font-black tracking-tight text-white mb-2">
+            {greeting}, {firstName}.
+          </h1>
+          <p className="text-sm text-slate-400">
+            {message}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-primary rounded-xl text-white font-bold text-sm btn-glow transition-transform hover:scale-105 active:scale-95 mt-4 sm:mt-0"
+        >
+          <Plus className="w-4 h-4" />
+          Quick Stock Entry
+        </button>
+      </header>
+
+      {/* ── Stat Cards ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+        {/* Total Books */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover flex flex-col justify-between h-32">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-indigo-400" />
+            </div>
+            <span className="text-[11px] font-bold text-brand-success">+12% this month</span>
+          </div>
           <div>
-            <span className="inline-block px-3 py-1 bg-[#bdf0d9] text-[#1a9a62] text-xs font-extrabold tracking-widest uppercase rounded-full mb-4">
-              SENIOR REGISTRAR
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Total Books</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">
+              {totalBooks.toLocaleString()}
             </span>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-2">Welcome back, Alex.</h1>
-            <p className="text-gray-500 text-lg">Here is your morning briefing for Central Campus Inventory.</p>
           </div>
-          
-          <QuickStockModal />
         </div>
 
-        {/* 4 Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          {/* Card 1 */}
-          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
-            <div className="flex justify-between items-start">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-900" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-emerald-600">+12% this month</span>
+        {/* Low Stock */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover flex flex-col justify-between h-32">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-8 rounded-lg bg-brand-danger/10 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-brand-danger" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Total Books</p>
-              <h3 className="text-4xl font-extrabold text-gray-900">12,408</h3>
-            </div>
+            <span className="text-[11px] font-bold text-brand-danger animate-pulse" style={{ animationDuration: "3s" }}>Requires Attention</span>
           </div>
-
-          {/* Card 2 */}
-          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
-            <div className="flex justify-between items-start">
-              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <span className="text-xs font-bold text-red-600">Requires Attention</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Low Stock Items</p>
-              <h3 className="text-4xl font-extrabold text-gray-900">04</h3>
-            </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Low Stock Items</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">
+              {lowStockCount.toString().padStart(2, '0')}
+            </span>
           </div>
-
-          {/* Card 3 */}
-          <div className="bg-white p-6 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between h-48">
-            <div className="flex justify-between items-start">
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Items Added Today</p>
-              <h3 className="text-4xl font-extrabold text-gray-900">34</h3>
-            </div>
-          </div>
-
-          {/* Card 4 - Dark Blue */}
-          <div className="bg-[#293d9b] p-6 rounded-[20px] shadow-[0_2px_15px_rgba(41,61,155,0.4)] flex flex-col justify-between h-48 text-white">
-            <div className="flex justify-between items-start">
-              <div className="w-12 h-12 bg-[#3e53b2] rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-blue-200 mb-1">Total Active Users</p>
-              <h3 className="text-4xl font-extrabold text-white">1,204</h3>
-            </div>
-          </div>
-
         </div>
 
-        {/* Lower layout split */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-          
-          {/* Critical Low Stock section */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between xl:mr-10 mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Critical Low Stock</h2>
-              <a href="/inventory" className="text-sm font-bold text-indigo-700 hover:text-indigo-900 transition">View All Inventory</a>
-            </div>
-
-            <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 p-6 flex flex-col gap-6">
-              
-              {/* Item 1 */}
-              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-lg">GMIT Record Book</h4>
-                    <p className="text-sm font-medium text-gray-500">ID: PRD-001</p>
-                  </div>
-                </div>
-                <div className="text-right flex items-center gap-3">
-                  <span className="flex h-3 w-3 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                  </span>
-                  <p className="text-xl font-bold text-red-600">2 books left</p>
-                </div>
-              </div>
-
-              {/* Item 2 */}
-              <div className="flex items-center justify-between border-b border-gray-100 pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                       <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-lg">Engineering Drawing Kit</h4>
-                    <p className="text-sm font-medium text-gray-500">ID: PRD-045</p>
-                  </div>
-                </div>
-                <div className="text-right flex items-center gap-3">
-                  <span className="flex h-3 w-3 relative">
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
-                  </span>
-                  <p className="text-xl font-bold text-orange-600">5 kits left</p>
-                </div>
-              </div>
-
-              {/* Item 3 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
-                      <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-lg">A4 Copy Paper (Ream)</h4>
-                    <p className="text-sm font-medium text-gray-500">ID: PRD-112</p>
-                  </div>
-                </div>
-                <div className="text-right flex items-center gap-3">
-                  <span className="flex h-3 w-3 relative">
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
-                  </span>
-                  <p className="text-xl font-bold text-orange-600">8 reams left</p>
-                </div>
-              </div>
-
+        {/* Items Added Today */}
+        <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top glow-hover flex flex-col justify-between h-32">
+          <div className="flex items-start">
+            <div className="w-8 h-8 rounded-lg bg-[#4a9eff]/10 flex items-center justify-center">
+              <PlusCircle className="w-4 h-4 text-[#4a9eff]" />
             </div>
           </div>
-
-          {/* Trending Books section */}
-          <div className="lg:col-span-1">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Trending This Week</h2>
-            <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_15px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col gap-5 h-[calc(100%-3rem)]">
-              
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">1</div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-900">Advanced Mathematics</p>
-                  <p className="text-xs text-gray-500">+45 requests</p>
-                </div>
-                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">2</div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-900">Physics Lab Manual</p>
-                  <p className="text-xs text-gray-500">+32 requests</p>
-                </div>
-                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#f0f4ff] rounded-full flex items-center justify-center text-indigo-700 font-bold">3</div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-900">CS Data Structures</p>
-                  <p className="text-xs text-gray-500">+28 requests</p>
-                </div>
-                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-              </div>
-
-              <div className="mt-auto pt-4 border-t border-gray-100">
-                <a href="/inventory" className="text-sm font-bold text-indigo-700 hover:text-indigo-900 block text-center w-full">See full trend report</a>
-              </div>
-            </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 mb-1">Items Added Today</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">
+              {addedToday}
+            </span>
           </div>
-
         </div>
 
+        {/* Total Active Users — gradient card */}
+        <div className="bg-gradient-primary rounded-xl p-5 shadow-lg glow-hover flex flex-col justify-between h-32 border border-white/10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10" />
+          <div className="flex items-start relative z-10">
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-xs font-semibold text-white/80 mb-1">Total Active Users</h3>
+            <span className="text-3xl font-bold font-mono text-white tracking-tight">
+              {activeUsers.toLocaleString()}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* ── Lower Section ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+
+        {/* Critical Low Stock */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-white">Critical Low Stock</h2>
+            <a href="/inventory" className="text-xs font-bold text-[#4a9eff] hover:text-white transition-colors">
+              View All Inventory
+            </a>
+          </div>
+          <div className="space-y-3">
+            {criticalItems.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-brand-card/50 border border-brand-border rounded-xl p-4 flex items-center justify-between hover:bg-brand-bg/60 transition-colors group"
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center border group-hover:scale-105 transition-transform"
+                    style={{ background: `${item.color}18`, borderColor: `${item.color}33` }}
+                  >
+                    <BookOpen className="w-5 h-5" style={{ color: item.color }} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white">{item.name}</span>
+                    <span className="text-xs font-mono text-slate-400 mt-0.5">ID: {item.id}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: item.color, animationDuration: "3s" }}
+                  />
+                  <span className="font-bold text-sm" style={{ color: item.color }}>
+                    {item.left} {item.unit} left
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trending This Week */}
+        <div className="lg:col-span-1">
+          <h2 className="text-lg font-bold text-white mb-4">Trending This Week</h2>
+          <div className="bg-brand-card border border-brand-border rounded-xl p-5 border-gradient-top h-[calc(100%-3rem)] flex flex-col">
+            <div className="space-y-6 flex-1">
+              {trendingItems.map((item) => (
+                <div key={item.rank} className="flex items-center gap-4 group">
+                  <div className="w-8 h-8 rounded-full bg-[#4a9eff]/10 text-[#4a9eff] flex items-center justify-center font-bold text-sm border border-[#4a9eff]/20 group-hover:bg-[#4a9eff] group-hover:text-white transition-colors">
+                    {item.rank}
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-bold text-sm text-slate-200 group-hover:text-white transition-colors">
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">
+                      {item.requests}
+                    </span>
+                  </div>
+                  <ArrowUp className="w-4 h-4 text-brand-success" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 pt-4 border-t border-brand-border">
+              <a
+                href="/reports"
+                className="w-full text-center text-xs font-bold text-[#4a9eff] flex items-center justify-center gap-1 hover:text-white transition-colors"
+              >
+                See full trend report <ArrowRight className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Quick Stock Entry Modal ────────────────────────────────── */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-brand-card border border-brand-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden border-gradient-top">
+            <div className="px-6 py-4 border-b border-brand-border flex justify-between items-center bg-brand-bg/60">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#4a9eff]" />
+                Quick Stock Entry
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form
+              className="p-6 space-y-4"
+              onSubmit={(e) => { e.preventDefault(); setShowModal(false); }}
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all"
+                  placeholder="e.g. Lab Coat"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                    SKU / ID
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white font-mono focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all"
+                    placeholder="PRD-123"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    defaultValue={1}
+                    className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white font-mono focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2.5 border border-brand-border bg-slate-800/50 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2.5 bg-gradient-primary text-white rounded-lg font-semibold btn-glow transition-transform hover:scale-[1.02] active:scale-95"
+                >
+                  Add Stock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

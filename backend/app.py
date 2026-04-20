@@ -8,7 +8,8 @@ Or via Flask CLI:
 """
 import logging
 import logging.config
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -65,6 +66,12 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # ── Upload folder ──────────────────────────────────────────────────────────
+    upload_folder = os.path.join(os.path.dirname(__file__), "uploads")
+    os.makedirs(upload_folder, exist_ok=True)
+    app.config["UPLOAD_FOLDER"] = upload_folder
+    app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB limit
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     CORS(
         app,
@@ -109,6 +116,11 @@ def create_app() -> Flask:
     @app.route("/health", methods=["GET"])
     def health():
         return jsonify({"status": "ok", "service": "Stockline Backend"}), 200
+
+    # ── Serve uploaded images ─────────────────────────────────────────────────
+    @app.route("/uploads/<path:filename>", methods=["GET"])
+    def serve_upload(filename):
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
     # ── Global Error Handlers ─────────────────────────────────────────────────
     @app.errorhandler(400)

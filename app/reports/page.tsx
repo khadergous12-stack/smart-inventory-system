@@ -1,9 +1,33 @@
 "use client";
 
-import React from "react";
-import { Download, PieChart, FileText, BarChart2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Download, PieChart, FileText, BarChart2, ShieldAlert } from "lucide-react";
+import { isStaff, downloadFile } from "@/lib/api";
 
 export default function ReportsPage() {
+  const [canView, setCanView] = useState(false);
+  const [downloadingCsv, setDownloadingCsv] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  useEffect(() => {
+    setCanView(isStaff());
+  }, []);
+
+  if (!canView) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-brand-bg relative z-10">
+        <div className="w-16 h-16 bg-brand-danger/10 text-brand-danger border border-brand-danger/20 rounded-2xl flex items-center justify-center mb-6">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+        <p className="text-slate-400 max-w-md">
+          You do not have the required permissions to view stock reports.
+          Please contact an administrator if you believe this is an error.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-brand-border">
@@ -16,13 +40,31 @@ export default function ReportsPage() {
           <h2 className="text-3xl font-bold tracking-tight mt-1">Analytics & Reporting</h2>
         </div>
         <div className="flex items-center gap-3 mt-4 sm:mt-0">
-          <button className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors rounded-lg text-white font-medium text-sm">
+          <button 
+            disabled={downloadingPdf}
+            onClick={async () => {
+              setDownloadingPdf(true);
+              try { await downloadFile("/reports/export/inventory/pdf", "inventory_report.pdf"); }
+              catch (err) { alert("Failed to download PDF"); }
+              finally { setDownloadingPdf(false); }
+            }}
+            className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors rounded-lg text-white font-medium text-sm disabled:opacity-50"
+          >
             <PieChart className="w-4 h-4 text-[#4a9eff]" />
-            Generate PDF
+            {downloadingPdf ? "Generating..." : "Generate PDF"}
           </button>
-          <button className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-5 py-2.5 bg-gradient-primary rounded-lg text-white font-semibold text-sm btn-glow hover:scale-[1.02] active:scale-95 transition-transform">
+          <button 
+            disabled={downloadingCsv}
+            onClick={async () => {
+              setDownloadingCsv(true);
+              try { await downloadFile("/reports/export/inventory/csv", "inventory_report.csv"); }
+              catch (err) { alert("Failed to download CSV"); }
+              finally { setDownloadingCsv(false); }
+            }}
+            className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-5 py-2.5 bg-gradient-primary rounded-lg text-white font-semibold text-sm btn-glow hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50"
+          >
             <Download className="w-4 h-4" />
-            Export CSV
+            {downloadingCsv ? "Exporting..." : "Export CSV"}
           </button>
         </div>
       </header>

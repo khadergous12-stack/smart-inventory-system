@@ -46,3 +46,20 @@ def admin_required(f):
         return f(*args, current_user=current_user, **kwargs)
 
     return decorated
+
+
+def roles_required(*roles):
+    """Allow only users whose role is one of the provided roles."""
+    def decorator(f):
+        @wraps(f)
+        @token_required
+        def decorated(*args, current_user, **kwargs):
+            if current_user.get("role") not in roles:
+                logger.warning(
+                    "Forbidden: user_id=%s role=%s tried to access restricted endpoint %s",
+                    current_user.get("user_id"), current_user.get("role"), request.path,
+                )
+                return jsonify({"error": f"Requires one of the following roles: {', '.join(roles)}"}), 403
+            return f(*args, current_user=current_user, **kwargs)
+        return decorated
+    return decorator

@@ -13,7 +13,7 @@ from flask import Blueprint, request, jsonify, Response
 from models import item as item_model
 from models import request_model
 from models import transaction_model
-from utils.decorators import token_required
+from utils.decorators import token_required, roles_required
 
 logger = logging.getLogger(__name__)
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
@@ -22,7 +22,7 @@ reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 # ── GET /reports/summary ──────────────────────────────────────────────────────
 
 @reports_bp.route("/summary", methods=["GET"])
-@token_required
+@roles_required("admin", "manager", "employee")
 def summary(current_user):
     from models.db import get_db
     db = get_db()
@@ -49,7 +49,7 @@ def summary(current_user):
 # ── GET /reports/export/inventory/csv ─────────────────────────────────────────
 
 @reports_bp.route("/export/inventory/csv", methods=["GET"])
-@token_required
+@roles_required("admin", "manager", "employee")
 def inventory_csv(current_user):
     from models.db import get_db
     items = list(get_db()["items"].find({}))
@@ -83,7 +83,7 @@ def inventory_csv(current_user):
 # ── GET /reports/export/inventory/pdf ─────────────────────────────────────────
 
 @reports_bp.route("/export/inventory/pdf", methods=["GET"])
-@token_required
+@roles_required("admin", "manager", "employee")
 def inventory_pdf(current_user):
     try:
         from fpdf import FPDF
@@ -143,7 +143,7 @@ def inventory_pdf(current_user):
 # ── GET /reports/export/requests/pdf ─────────────────────────────────────────
 
 @reports_bp.route("/export/requests/pdf", methods=["GET"])
-@token_required
+@roles_required("admin", "manager", "employee")
 def requests_pdf(current_user):
     try:
         from fpdf import FPDF

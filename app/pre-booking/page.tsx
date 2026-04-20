@@ -1,15 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Search, Calendar, Check, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Search, Calendar, Check, X, Loader2 } from "lucide-react";
+import { requests, StockRequest } from "@/lib/api";
 
 export default function PreBookingPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [bookings, setBookings] = useState<StockRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const bookingsList = [
-    { id: "RES-209", item: "Logitech MX Master 3", user: "Ravi Kumar", date: "Nov 02, 2026", qty: 2, status: "PENDING" },
-    { id: "RES-210", item: "Herman Miller Aeron", user: "Emma Wilson", date: "Nov 05, 2026", qty: 1, status: "APPROVED" },
-  ];
+  // Form State
+  const [formItemName, setFormItemName] = useState("");
+  const [formQty, setFormQty] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    const { data } = await requests.list(1, 100); // Fetch up to 100 for now
+    if (data) {
+      setBookings(data.requests);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formItemName.trim()) return;
+
+    setSubmitting(true);
+    const { error } = await requests.create(formItemName, formQty);
+    if (!error) {
+      setFormItemName("");
+      setFormQty(1);
+      fetchBookings();
+    } else {
+      alert(error);
+    }
+    setSubmitting(false);
+  };
+
+  const handleApprove = async (id: string) => {
+    const { error } = await requests.approve(id);
+    if (!error) fetchBookings();
+    else alert(error);
+  };
+
+  const handleReject = async (id: string) => {
+    const { error } = await requests.reject(id);
+    if (!error) fetchBookings();
+    else alert(error);
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto relative z-10 px-8 py-6">
@@ -32,22 +76,36 @@ export default function PreBookingPage() {
             <Calendar className="w-5 h-5 text-[#4a9eff]" />
             New Reservation
           </h3>
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Product ID / Name</label>
-              <input type="text" className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all" placeholder="e.g. PRD-8821" />
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Product Name</label>
+              <input 
+                type="text" 
+                value={formItemName}
+                onChange={(e) => setFormItemName(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all" 
+                placeholder="e.g. Advanced Mathematics" 
+              />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Customer Name</label>
-              <input type="text" className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all" placeholder="Jane Smith" />
-            </div>
+            {/* Removed Customer Name input because backend automatically assigns requested_by to current loggen in user */}
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Quantity Requested</label>
-              <input type="number" className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white font-mono focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all" min="1" defaultValue={1} />
+              <input 
+                type="number" 
+                value={formQty}
+                onChange={(e) => setFormQty(Number(e.target.value))}
+                min="1" 
+                required
+                className="w-full px-4 py-2.5 bg-brand-bg border border-brand-border rounded-lg text-sm text-white font-mono focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all" 
+              />
             </div>
-            <button className="w-full py-3 mt-2 bg-gradient-primary text-white rounded-lg font-semibold btn-glow transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" />
-              Submit Pre-booking
+            <button 
+              disabled={submitting}
+              className="w-full py-3 mt-2 bg-gradient-primary text-white rounded-lg font-semibold btn-glow transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {submitting ? "Submitting..." : "Submit Pre-booking"}
             </button>
           </form>
         </div>
@@ -80,27 +138,43 @@ export default function PreBookingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/50 text-sm">
-                {bookingsList
-                  .filter(res => res.user.toLowerCase().includes(searchTerm.toLowerCase()) || res.item.toLowerCase().includes(searchTerm.toLowerCase()))
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" /> Fetching reservations...
+                      </div>
+                    </td>
+                  </tr>
+                ) : bookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                      No active bookings found.
+                    </td>
+                  </tr>
+                ) : bookings
+                  .filter(res => res.requested_by?.toLowerCase().includes(searchTerm.toLowerCase()) || res.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) || res.id?.toLowerCase().includes(searchTerm.toLowerCase()))
                   .map((res) => (
                   <tr key={res.id} className="hover:bg-brand-bg/60 transition-colors group">
                     <td className="px-6 py-4 font-mono text-slate-400 group-hover:text-[#4a9eff] transition-colors">{res.id}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-200">{res.item}</span>
-                        <span className="text-xs text-slate-400">By {res.user}</span>
+                        <span className="font-semibold text-slate-200">{res.item_name}</span>
+                        <span className="text-xs text-slate-400">By {res.requested_by}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                        <div className="flex flex-col items-center">
-                        <span className="text-white font-medium">{res.date}</span>
-                        <span className="text-[11px] font-mono text-slate-400 mt-0.5">Qty: {res.qty}</span>
+                        <span className="text-white font-medium">—</span>
+                        <span className="text-[11px] font-mono text-slate-400 mt-0.5">Qty: {res.quantity}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${
-                        res.status === 'APPROVED' 
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border uppercase ${
+                        res.status === 'approved' 
                           ? 'bg-brand-success/10 text-brand-success border-brand-success/20' 
+                          : res.status === 'rejected'
+                          ? 'bg-brand-danger/10 text-brand-danger border-brand-danger/20'
                           : 'bg-brand-warning/10 text-brand-warning border-brand-warning/20'
                       }`}>
                         {res.status}
@@ -108,12 +182,16 @@ export default function PreBookingPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button className="p-1.5 text-brand-success hover:bg-brand-success/10 rounded-lg transition-all border border-transparent hover:border-brand-success/30" title="Approve">
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button className="p-1.5 text-brand-danger hover:bg-brand-danger/10 rounded-lg transition-all border border-transparent hover:border-brand-danger/30" title="Reject">
-                          <X className="w-4 h-4" />
-                        </button>
+                        {res.status === 'pending' && (
+                          <>
+                            <button onClick={() => handleApprove(res.id)} className="p-1.5 text-brand-success hover:bg-brand-success/10 rounded-lg transition-all border border-transparent hover:border-brand-success/30" title="Approve">
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleReject(res.id)} className="p-1.5 text-brand-danger hover:bg-brand-danger/10 rounded-lg transition-all border border-transparent hover:border-brand-danger/30" title="Reject">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

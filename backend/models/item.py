@@ -15,8 +15,20 @@ def create_indexes():
 
 # ── CRUD ─────────────────────────────────────────────────────────────────────
 
-def insert_item(name: str, quantity: int, description: str = "") -> str:
-    doc = {"name": name, "quantity": quantity, "description": description}
+def insert_item(
+    name: str,
+    quantity: int,
+    description: str = "",
+    author: str = "",
+    image_url: str = "",
+) -> str:
+    doc = {
+        "name": name,
+        "quantity": quantity,
+        "description": description,
+        "author": author,
+        "image_url": image_url,
+    }
     result = _col().insert_one(doc)
     return str(result.inserted_id)
 
@@ -74,4 +86,6 @@ def serialize(doc: dict) -> dict:
         "name": doc.get("name", ""),
         "quantity": doc.get("quantity", 0),
         "description": doc.get("description", ""),
+        "author": doc.get("author", ""),
+        "image_url": doc.get("image_url", ""),
     }

@@ -83,6 +83,8 @@ export interface Item {
   name: string;
   quantity: number;
   description: string;
+  author: string;
+  image_url: string;
 }
 
 export interface PaginatedItems {
@@ -96,17 +98,69 @@ export const inventory = {
 
   get: (id: string) => request<{ item: Item }>(`/items/${id}`),
 
-  add: (name: string, quantity: number, description = "") =>
-    request<{ message: string; item_id: string }>("/items", {
+  add: (
+    name: string,
+    quantity: number,
+    description?: string,
+    author?: string,
+    imageFile?: File | null,
+  ) => {
+    if (imageFile) {
+      // multipart
+      const fd = new FormData();
+      fd.append("name", name);
+      fd.append("quantity", String(quantity));
+      fd.append("description", description || "");
+      fd.append("author", author || "");
+      fd.append("image", imageFile);
+      return request<{ message: string; item_id: string }>("/items", {
+        method: "POST",
+        body: fd,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` },
+      });
+    }
+    return request<{ message: string; item_id: string }>("/items", {
       method: "POST",
-      body: JSON.stringify({ name, quantity, description }),
-    }),
+      body: JSON.stringify({ name, quantity, description, author }),
+    });
+  },
 
-  update: (id: string, name: string, quantity: number, description = "") =>
-    request<{ message: string }>(`/items/${id}`, {
+  update: (
+    id: string,
+    name: string,
+    quantity: number,
+    description?: string,
+    author?: string,
+    imageFile?: File | null,
+  ) => {
+    if (imageFile) {
+      const fd = new FormData();
+      fd.append("name", name);
+      fd.append("quantity", String(quantity));
+      fd.append("description", description || "");
+      fd.append("author", author || "");
+      fd.append("image", imageFile);
+      return request<{ message: string }>(`/items/${id}`, {
+        method: "PUT",
+        body: fd,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` },
+      });
+    }
+    return request<{ message: string }>(`/items/${id}`, {
       method: "PUT",
-      body: JSON.stringify({ name, quantity, description }),
-    }),
+      body: JSON.stringify({ name, quantity, description, author }),
+    });
+  },
+
+  uploadImage: (id: string, imageFile: File) => {
+    const fd = new FormData();
+    fd.append("image", imageFile);
+    return request<{ message: string; image_url: string }>(`/items/${id}/image`, {
+      method: "POST",
+      body: fd,
+      headers: { Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` },
+    });
+  },
 
   delete: (id: string) =>
     request<{ message: string }>(`/items/${id}`, { method: "DELETE" }),
@@ -247,4 +301,9 @@ export function clearSession() {
 
 export function isAdmin(): boolean {
   return getUser()?.role === "admin";
+}
+
+export function isStaff(): boolean {
+  const role = getUser()?.role;
+  return role === "admin" || role === "manager" || role === "employee";
 }

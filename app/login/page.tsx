@@ -1,85 +1,133 @@
 "use client";
 
 import React, { useState } from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { auth, saveSession } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      localStorage.setItem("token", "dummy_jwt_token");
-      router.push("/");
+    setError("");
+    setLoading(true);
+    try {
+      const { data, error: apiError } = await auth.login(email, password);
+      if (apiError || !data) throw new Error(apiError || "Login failed");
+      saveSession(data.token, data.user);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[#0b1121] text-white font-sans overflow-hidden">
-      <div className="w-full max-w-[440px] p-8 md:p-10 bg-[#161f33] rounded-[24px] shadow-2xl z-10 m-4 lg:m-0 flex flex-col items-center">
-        
-        {/* Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-[#4f46e5]/10 flex items-center justify-center mb-6">
-          <LogIn className="w-6 h-6 text-[#6366f1]" />
-        </div>
+    <div className="fixed inset-0 flex items-center justify-center bg-brand-bg overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#4a9eff]/6 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#7c3aed]/6 blur-[120px] rounded-full pointer-events-none" />
 
-        {/* Header */}
+      <div className="relative w-full max-w-[420px] mx-4">
+        {/* Logo above card */}
         <div className="text-center mb-8">
-          <h2 className="text-[22px] font-semibold text-white mb-2 tracking-wide">Welcome Back</h2>
-          <p className="text-sm font-medium text-slate-400">Enter your credentials to access StockLine</p>
+          <h1 className="text-3xl font-black tracking-tight text-gradient">Stockline</h1>
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium mt-1">Smart Stock, Zero Chaos</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} className="w-full space-y-5">
-          <div className="space-y-4">
+        {/* Card */}
+        <div className="bg-brand-card border border-brand-border rounded-2xl shadow-2xl p-8 border-gradient-top">
+          {/* Icon + Title */}
+          <div className="flex flex-col items-center mb-7">
+            <div className="w-12 h-12 rounded-xl bg-[#4a9eff]/10 border border-[#4a9eff]/20 flex items-center justify-center mb-4">
+              <LogIn className="w-5 h-5 text-[#4a9eff]" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Welcome Back</h2>
+            <p className="text-sm text-slate-400 mt-1">Sign in to your account</p>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-brand-danger/10 border border-brand-danger/20 rounded-xl text-sm text-brand-danger font-medium">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-[13px] font-medium text-slate-300 mb-2" htmlFor="email">Email Address</label>
-              <input 
-                id="email" 
-                type="email" 
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0b1121] border border-transparent rounded-[14px] text-[15px] text-white focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-all placeholder:text-slate-500" 
-                placeholder="admin@stockline.com" 
+                className="w-full px-4 py-3 bg-brand-bg border border-brand-border rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all"
+                placeholder="admin@stockline.com"
               />
             </div>
-            
+
             <div>
-              <label className="block text-[13px] font-medium text-slate-300 mb-2" htmlFor="password">Password</label>
-              <input 
-                id="password" 
-                type="password" 
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0b1121] border border-transparent rounded-[14px] text-[15px] text-white focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-all placeholder:text-slate-500" 
-                placeholder="••••••••" 
-              />
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPwd ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 pr-11 bg-brand-bg border border-brand-border rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-[#4a9eff] focus:ring-1 focus:ring-[#4a9eff] transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between text-[13px] pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-              <input type="checkbox" className="w-4 h-4 rounded border-slate-700 bg-[#0b1121] text-[#4f46e5] focus:ring-[#4f46e5] focus:ring-offset-0 focus:border-none" />
-              <span>Remember me</span>
-            </label>
-            <a href="#" className="font-medium text-[#6366f1] hover:text-[#818cf8] transition-colors">Forgot password?</a>
-          </div>
+            <div className="flex items-center justify-between text-xs pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200 transition-colors">
+                <input type="checkbox" className="w-3.5 h-3.5 rounded border-brand-border bg-brand-bg accent-[#4a9eff]" />
+                Remember me
+              </label>
+              <a href="#" className="font-medium text-[#4a9eff] hover:text-white transition-colors">
+                Forgot password?
+              </a>
+            </div>
 
-          <button type="submit" className="w-full mt-2 py-3.5 bg-[#4f46e5] hover:bg-[#6366f1] rounded-[14px] font-medium text-white transition-colors text-[15px]">
-            Sign In
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-1 py-3 bg-gradient-primary hover:opacity-90 rounded-xl font-bold text-white text-sm btn-glow transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? "Signing in…" : "Sign In"}
+            </button>
+          </form>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-[13px] text-slate-400 font-medium">
-          <p>
-            Don't have an account? <Link href="/register" className="text-[#6366f1] hover:text-[#818cf8] font-medium transition-colors ml-1">Register here</Link>
+          {/* Footer */}
+          <p className="mt-6 text-center text-xs text-slate-500">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-[#4a9eff] hover:text-white font-semibold transition-colors ml-0.5">
+              Register here
+            </Link>
           </p>
         </div>
       </div>

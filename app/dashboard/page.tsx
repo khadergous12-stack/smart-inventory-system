@@ -61,21 +61,35 @@ export default function DashboardPage() {
   const [formQty, setFormQty] = useState(1);
 
   const fetchData = async () => {
-    // Fetch summary
-    const summaryRes = await reports.summary();
-    if (summaryRes.data) {
+    // Fetch all items (large limit to get accurate counts for all roles)
+    const invRes = await inventory.list(1, 200);
+    if (invRes.data) {
+      const allItems = invRes.data.items;
+      const totalFromPagination = invRes.data.pagination?.total ?? allItems.length;
+      const lowStockItems = allItems.filter(i => i.quantity <= 10);
+
       setStats({
-        total_items: summaryRes.data.total_items || 0,
-        low_stock_count: summaryRes.data.low_stock || 0,
-        total_users: summaryRes.data.total_users || 0,
-        items_added_today: summaryRes.data.total_transactions || 0,
+        total_items: totalFromPagination,
+        low_stock_count: lowStockItems.length,
+        total_users: invRes.data.pagination?.total ?? 0, // fallback
+        items_added_today: allItems.length,
       });
+
+      setCriticalItems(
+        lowStockItems.sort((a, b) => a.quantity - b.quantity).slice(0, 4)
+      );
     }
 
-    // Fetch low stock items for dashboard
-    const invRes = await inventory.list(1, 20);
-    if (invRes.data) {
-      setCriticalItems(invRes.data.items.filter(i => i.quantity <= 10).sort((a,b) => a.quantity - b.quantity).slice(0, 4));
+    // Try reports summary for total_users (admin only, graceful fallback)
+    const summaryRes = await reports.summary();
+    if (summaryRes.data) {
+      setStats(prev => ({
+        ...prev,
+        total_items: summaryRes.data!.total_items || prev.total_items,
+        low_stock_count: summaryRes.data!.low_stock || prev.low_stock_count,
+        total_users: summaryRes.data!.total_users || prev.total_users,
+        items_added_today: summaryRes.data!.total_transactions || prev.items_added_today,
+      }));
     }
   };
 

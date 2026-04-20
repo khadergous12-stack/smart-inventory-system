@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-brand-bg: #061229;
+  --color-brand-card: #0a1128;
+  --color-brand-border: #14244b;
+  --color-brand-success: #00E5FF; /* Repurposed to Bioluminescence Cyan */
+  --color-brand-warning: #f59e0b;
+  --color-brand-danger: #ef4444;
+  --font-sans: var(--font-jakarta-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-bg);
+    color: #ffffff;
+    font-family: var(--font-sans), sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    /* Pearlescent shift: White -> Soft Cyan -> Pale Pearl/Lavender -> Cyan */
+    background-image: linear-gradient(135deg, #ffffff 0%, #E0F7FA 40%, #f3e8ff 70%, #00E5FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .bg-gradient-primary {
+    /* Deep oceanic base with a pearlescent cyan highlight */
+    background-image: linear-gradient(135deg, #00B4D8 0%, #001F3F 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Pearl shimmer overlay for buttons */
+  .bg-gradient-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.7s ease;
+  }
+  
+  .bg-gradient-primary:hover::after {
+    left: 200%;
+  }
+  
+  .border-gradient-top {
+    position: relative;
+  }
+  
+  .border-gradient-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), #00E5FF, rgba(243,232,255,0.4), transparent);
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+  }
+
+  .glow-hover {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .glow-hover:hover {
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.08); /* Calm abstract glow */
+    border-color: rgba(0, 229, 255, 0.2);
+  }
+
+  .nav-active {
+    background-color: rgba(0, 229, 255, 0.05);
+    box-shadow: inset 3px 0 0 0 #00E5FF, 0 0 20px rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+  }
+  
+  .btn-glow {
+    box-shadow: 0 0 15px rgba(0, 180, 216, 0.3);
+    transition: all 0.3s ease-out;
+  }
+  
+  .btn-glow:hover {
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+  }
+}

@@ -131,7 +131,7 @@ export default function TopHeader() {
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 bottom-full mb-2 w-56 bg-[#161f33] border border-brand-border rounded-xl shadow-2xl overflow-hidden z-[999] flex flex-col origin-bottom-right animate-in fade-in zoom-in duration-200">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-[#161f33] border border-brand-border rounded-xl shadow-2xl overflow-hidden z-[999] flex flex-col origin-top-right animate-in fade-in zoom-in-95 duration-150">
               <div className="px-4 py-3 border-b border-brand-border bg-[#0b1121]/50">
                 <p className="text-sm font-semibold text-white">{userName}</p>
                 <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
